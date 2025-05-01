@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>National Archives Lucky Dip</title>
+<style>
+body{font-family:sans-serif;margin:3rem;line-height:1.5}
+button{padding:.6rem 1rem;font-size:1rem;border-radius:.4rem;cursor:pointer}
+#card{border:1px solid #ccc;border-radius:.6rem;padding:1.5rem;max-width:46rem}
+</style>
+</head>
+<body>
+  <h1>🎲 National Archives lucky dip</h1>
+
+  <div id="card">
+    <h2 id="title">Loading…</h2>
+    <p><strong>Held by:</strong> <span id="heldBy"></span></p>
+    <p id="desc"></p>
+    <p><a id="link" target="_blank">Open in Discovery ↗︎</a></p>
+  </div>
+
+  <p><button id="roll">Roll again</button></p>
+
+<script>
+async function roll(){
+  const r = await fetch('/api/random');
+  const d = await r.json();
+  document.getElementById('title').textContent = d.title || 'Untitled';
+  document.getElementById('heldBy').textContent = d.heldBy || 'Unknown';
+  document.getElementById('desc').textContent = d.description || '';
+  const a = document.getElementById('link');
+  a.href = d.url; a.textContent = d.url;
+}
+document.getElementById('roll').onclick = roll;
+roll();        // initial load
+</script>
+</body>
+</html>
