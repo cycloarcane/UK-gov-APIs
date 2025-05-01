@@ -4,20 +4,39 @@
 <meta charset="utf-8">
 <title>🎲 National Archives Lucky Dip</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+
 <style>
 /* ------------ core layout ------------ */
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;
-          line-height:1.45;background:#0d1117;color:#f0f6fc}
-body{display:flex;justify-content:center;align-items:center;overflow:hidden;position:relative}
+          line-height:1.45;background:#0d1117;color:#f0f6fc;overflow:hidden}
+body{display:flex;justify-content:center;align-items:center;position:relative}
 
-/* ------------ matrix background ------------ */
-#bg{position:absolute;inset:0;z-index:-1;pointer-events:none;filter:blur(1px) opacity(.25)}
+/* ------------ animated-logo background ------------ */
+body::before, body::after{
+  content:"";
+  position:absolute; inset:-50%;         /* oversize so no gaps on scroll */
+  background-image:url("https://www.nationalarchives.gov.uk/wp-content/uploads/sites/24/2019/07/tna-logo-600x315.jpg");
+  background-size:220px;                 /* tile dimensions */
+  background-repeat:repeat;
+  opacity:0.08;                          /* subtle so content stays readable */
+  animation:drift 60s linear infinite;
+  pointer-events:none;                   /* let clicks through */
+}
+body::after{
+  animation-direction:reverse;           /* second layer, opposite direction */
+  opacity:0.05;
+}
+
+@keyframes drift{
+  from{transform:translate(0,0) rotate(0deg);}
+  to  {transform:translate(25%,25%) rotate(0deg);}   /* gentle diagonal slide */
+}
 
 /* ------------ card ------------ */
 #card{background:#161b22;border:1px solid #30363d;border-radius:1rem;
       padding:2rem 2.5rem;max-width:46rem;width:90vw;
-      box-shadow:0 8px 16px rgba(0,0,0,.45)}
+      box-shadow:0 8px 16px rgba(0,0,0,.45);position:relative;z-index:1}
 h1{font-size:2rem;margin-bottom:1.2rem;text-align:center}
 h2{font-size:1.25rem;margin-bottom:.6rem}
 p{margin:.3rem 0}
@@ -31,8 +50,6 @@ button:hover{background:#2ea043}
 </head>
 <body>
 
-<canvas id="bg"></canvas>
-
 <div id="card">
   <h1>🎲 Lucky-Dip</h1>
   <h2 id="title">Loading…</h2>
@@ -43,10 +60,10 @@ button:hover{background:#2ea043}
 </div>
 
 <script>
-/* -------- helper -------- */
+/* helper */
 const $ = id => document.getElementById(id);
 
-/* -------- archives API -------- */
+/* archives API */
 async function roll(){
   try{
     const r = await fetch('/api/random');
@@ -63,25 +80,6 @@ async function roll(){
 }
 $('roll').onclick = roll;
 roll();
-
-/* -------- “?” rain background -------- */
-const cv = $('bg'), ctx = cv.getContext('2d');
-let W,H,cols,s=20,drops=[];
-const chars='????????????????????????????????????????';
-function resize(){
-  W=cv.width=innerWidth; H=cv.height=innerHeight;
-  cols = Math.floor(W/s); drops = Array(cols).fill(1);
-}
-addEventListener('resize',resize); resize();
-(function draw(){
-  ctx.fillStyle='rgba(13,17,23,.15)'; ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='#3fb950'; ctx.font=s+'px monospace';
-  drops.forEach((y,i)=>{
-    ctx.fillText(chars[Math.random()*chars.length|0],i*s,y*s);
-    drops[i] = y*s>H && Math.random()>.975 ? 0 : y+1;
-  });
-  requestAnimationFrame(draw);
-})();
 </script>
 </body>
 </html>
