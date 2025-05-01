@@ -27,20 +27,15 @@ body{
 body::before, body::after{
   content:"";
   position:absolute;
-  inset:-50%;                        /* oversize -> no gaps */
+  inset:-50%;
   background:url("https://www.nationalarchives.gov.uk/wp-content/uploads/sites/24/2019/07/tna-logo-600x315.jpg") repeat;
   background-size:220px;
-  opacity:0.08;                      /* subtle layer */
+  opacity:0.08;
   animation:drift 60s linear infinite;
   pointer-events:none;
 }
-body::after{
-  animation-direction:reverse;       /* counter-movement */
-  opacity:0.05;
-}
-@keyframes drift{
-  to{transform:translate(25%,25%);}
-}
+body::after{animation-direction:reverse; opacity:0.05;}
+@keyframes drift{to{transform:translate(25%,25%);}}
 
 /* card */
 #card{
@@ -70,14 +65,39 @@ button{
   transition:background .2s;
 }
 button:hover{background:#2ea043}
+
+/* ---------- loading overlay ---------- */
+#loading{
+  position:absolute;         /* over the whole viewport */
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:rgba(13,17,23,.8);
+  visibility:hidden;
+  opacity:0;
+  transition:opacity .25s;
+  z-index:2;
+}
+#loading.active{visibility:visible; opacity:1;}
+.spinner{
+  width:48px;height:48px;
+  border:6px solid #30363d;
+  border-top-color:#58a6ff;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
 
+<!-- translucent loading layer -->
+<div id="loading"><div class="spinner"></div></div>
+
 <div id="card">
   <h1>🎲 Lucky-Dip</h1>
 
-  <!-- NEW: show the word -->
   <p><em>Search term:</em> <span id="word">…</span></p>
 
   <h2 id="title">Loading…</h2>
@@ -93,8 +113,10 @@ button:hover{background:#2ea043}
 <!-- ---------- scripts ---------- -->
 <script>
 const $ = id => document.getElementById(id);
+const setLoading = on => $('loading').classList.toggle('active', on);
 
 async function roll(){
+  setLoading(true);
   try{
     const r = await fetch('/api/random');
     if(!r.ok) throw new Error(r.status+" "+r.statusText);
@@ -108,6 +130,8 @@ async function roll(){
   }catch(err){
     $('title').textContent = '⚠️ Error fetching record';
     console.error(err);
+  }finally{
+    setLoading(false);
   }
 }
 $('roll').onclick = roll;
