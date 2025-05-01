@@ -2,37 +2,86 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>National Archives Lucky Dip</title>
+<title>🎲 National Archives Lucky Dip</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-body{font-family:sans-serif;margin:3rem;line-height:1.5}
-button{padding:.6rem 1rem;font-size:1rem;border-radius:.4rem;cursor:pointer}
-#card{border:1px solid #ccc;border-radius:.6rem;padding:1.5rem;max-width:46rem}
+/* ------------ core layout ------------ */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;
+          line-height:1.45;background:#0d1117;color:#f0f6fc}
+body{display:flex;justify-content:center;align-items:center;overflow:hidden;position:relative}
+
+/* ------------ matrix background ------------ */
+#bg{position:absolute;inset:0;z-index:-1;pointer-events:none;filter:blur(1px) opacity(.25)}
+
+/* ------------ card ------------ */
+#card{background:#161b22;border:1px solid #30363d;border-radius:1rem;
+      padding:2rem 2.5rem;max-width:46rem;width:90vw;
+      box-shadow:0 8px 16px rgba(0,0,0,.45)}
+h1{font-size:2rem;margin-bottom:1.2rem;text-align:center}
+h2{font-size:1.25rem;margin-bottom:.6rem}
+p{margin:.3rem 0}
+a{color:#58a6ff;text-decoration:none}
+a:hover{text-decoration:underline}
+button{margin-top:1.5rem;padding:.7rem 1.4rem;font-size:1rem;
+       border:none;border-radius:.5rem;background:#238636;color:#fff;
+       cursor:pointer;transition:background .2s}
+button:hover{background:#2ea043}
 </style>
 </head>
 <body>
-  <h1>🎲 National Archives lucky dip</h1>
 
-  <div id="card">
-    <h2 id="title">Loading…</h2>
-    <p><strong>Held by:</strong> <span id="heldBy"></span></p>
-    <p id="desc"></p>
-    <p><a id="link" target="_blank">Open in Discovery ↗︎</a></p>
-  </div>
+<canvas id="bg"></canvas>
 
-  <p><button id="roll">Roll again</button></p>
+<div id="card">
+  <h1>🎲 Lucky-Dip</h1>
+  <h2 id="title">Loading…</h2>
+  <p><strong>Held by:</strong> <span id="heldBy"></span></p>
+  <p id="desc"></p>
+  <p><a id="link" target="_blank" rel="noopener">Open in Discovery ↗︎</a></p>
+  <div style="text-align:center"><button id="roll">Roll again</button></div>
+</div>
 
 <script>
+/* -------- helper -------- */
+const $ = id => document.getElementById(id);
+
+/* -------- archives API -------- */
 async function roll(){
-  const r = await fetch('/api/random');
-  const d = await r.json();
-  document.getElementById('title').textContent = d.title || 'Untitled';
-  document.getElementById('heldBy').textContent = d.heldBy || 'Unknown';
-  document.getElementById('desc').textContent = d.description || '';
-  const a = document.getElementById('link');
-  a.href = d.url; a.textContent = d.url;
+  try{
+    const r = await fetch('/api/random');
+    if(!r.ok) throw new Error(r.status+" "+r.statusText);
+    const d = await r.json();
+    $('title').textContent  = d.title       || 'Untitled';
+    $('heldBy').textContent = d.heldBy      || 'Unknown';
+    $('desc').textContent   = d.description || '';
+    $('link').href = $('link').textContent = d.url;
+  }catch(e){
+    $('title').textContent = '⚠️ Error fetching record';
+    console.error(e);
+  }
 }
-document.getElementById('roll').onclick = roll;
-roll();        // initial load
+$('roll').onclick = roll;
+roll();
+
+/* -------- “?” rain background -------- */
+const cv = $('bg'), ctx = cv.getContext('2d');
+let W,H,cols,s=20,drops=[];
+const chars='????????????????????????????????????????';
+function resize(){
+  W=cv.width=innerWidth; H=cv.height=innerHeight;
+  cols = Math.floor(W/s); drops = Array(cols).fill(1);
+}
+addEventListener('resize',resize); resize();
+(function draw(){
+  ctx.fillStyle='rgba(13,17,23,.15)'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#3fb950'; ctx.font=s+'px monospace';
+  drops.forEach((y,i)=>{
+    ctx.fillText(chars[Math.random()*chars.length|0],i*s,y*s);
+    drops[i] = y*s>H && Math.random()>.975 ? 0 : y+1;
+  });
+  requestAnimationFrame(draw);
+})();
 </script>
 </body>
 </html>
