@@ -37,7 +37,7 @@ def random_word() -> str:
         return random.choice(FALLBACK_WORDS)
 
 
-def fetch_records(query: str, page_size: int = 100) -> List[Dict[str, Any]]:
+def fetch_records(query: str, page_size: int = 300) -> List[Dict[str, Any]]:
     """Fetch a page of digitised records for `query`."""
     params = {"query": query, "digitised": "true", "pageSize": str(page_size)}
     r = session.get(API_URL, params=params, timeout=10)
